@@ -1,0 +1,6 @@
+To run this lab, you'll need to have an installed copy of the (old) Leap SDK, version 3.2.1+45911:
+https://developer.leapmotion.com/releases/leap-motion-orion-321
+
+Later versions of the software/SDK phased out python code support
+
+Importantly, LeapUdp.py runs on Python version 2.7 (not on Python 3)

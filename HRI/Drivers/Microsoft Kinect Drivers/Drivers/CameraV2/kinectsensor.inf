@@ -1,0 +1,113 @@
+[Version]
+Signature="$WINDOWS NT$"
+Class=KinectSensor
+ClassGuid={1fa09b66-2ff8-4ff9-89ab-bd4e8ce2e48e}
+Provider=%MSFT%
+DriverVer=10/18/2014,2.0.1410.18000
+BootCritical=1
+CatalogFile=KmdfKinectSensors.cat
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=KinectSensorClassReg     
+
+[KinectSensorClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,"-24"
+
+[DestinationDirs]
+DefaultDestDir = 12
+KinectRuntimeInstallService.Files.Ext = 12,KinectV2
+KinectRuntime.Files.Ext = 10,Temp
+
+; ================= Device section =====================
+
+[Manufacturer]
+%MfgName%=Microsoft,NTamd64
+
+[Microsoft]
+%USB\VID_045E&PID_02D8&MI_00.DeviceDesc%=KinectSensor.Dev, USB\VID_045E&PID_02D8&MI_00    ; Metra Interface 0
+%USB\VID_045E&PID_02C4&MI_00.DeviceDesc%=KinectSensor.Dev, USB\VID_045E&PID_02C4&MI_00    ; Petra Interface 0
+
+[Microsoft.NTamd64]
+%USB\VID_045E&PID_02D8&MI_00.DeviceDesc%=KinectSensor.Dev, USB\VID_045E&PID_02D8&MI_00    ; Metra Interface 0
+%USB\VID_045E&PID_02C4&MI_00.DeviceDesc%=KinectSensor.Dev, USB\VID_045E&PID_02C4&MI_00    ; Petra Interface 0
+
+[KinectSensor.Dev.NT]
+CopyFiles=KinectRuntimeInstallService.Files.Ext,KinectSensor.Files.Ext,KinectRuntime.Files.Ext
+AddReg=KinectSensor.Dev.AddReg
+
+; Workaround to allow the start of the service on Windows 8.  Forces legacy mode
+[KinectSensor.Dev.AddReg]
+HKLM,SOFTWARE\Microsoft\Kinect\v2.0,InfInstall,0x10001,1 ; KinectV2
+
+[KinectSensor.Dev.NT.Services]
+Addservice = KinectRuntimeInstallService, 0x00000800, KinectRuntimeInstallService.AddService
+Addservice = KinectSensor, 0x00000002, KinectSensor.AddService
+
+[KinectSensor.AddService]
+DisplayName    = %KinectSensor.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\KinectSensor.sys
+AddReg         = KinectSensor.AddReg
+LoadOrderGroup = Base
+
+[KinectSensor.AddReg]
+HKR,"Parameters","MaximumTransferSize",0x10001,65536
+HKR,"Parameters","DebugLevel",0x10001,2
+HKR,"Parameters","LogPages",0x10001,16
+HKR,"Parameters","ForceLogsInMiniDump",0x10001,1
+
+[KinectRuntimeInstallService.Files.Ext]
+K4WRuntimeInstallService.exe
+
+[KinectRuntime.Files.Ext]
+KinectRuntime-x64.msi
+vcredist_x64.exe
+vcredist_x86.exe
+
+[KinectSensor.Files.Ext]
+KinectSensor.sys
+
+[SourceDisksNames]
+1=%Disk_Description%,,,
+
+[SourceDisksFiles]
+KinectRuntime-x64.msi = 1
+K4WRuntimeInstallService.exe = 1
+KinectSensor.sys = 1
+vcredist_x64.exe = 1
+vcredist_x86.exe = 1
+
+[KinectRuntimeInstallService.AddService]
+DisplayName    = %KinectRuntimeInstallService.SvcDesc%
+ServiceType    = 0x00000010
+StartType      = 3
+ErrorControl   = 1
+ServiceBinary  = %12%\KinectV2\K4WRuntimeInstallService.exe
+Dependencies   = PlugPlay
+
+;-------------- WDF Coinstaller installation
+[DestinationDirs]
+
+
+[KinectSensor.Dev.NT.Wdf]
+KmdfService = KinectSensor, KinectSensor_wdfsect
+
+[KinectSensor_wdfsect]
+KmdfLibraryVersion = 1.11
+
+;---------------------------------------------------------------;
+
+[Strings]
+MSFT            = "Microsoft"
+MfgName         = "Microsoft"
+Disk_Description= "KinectSensor Installation Disk"
+KinectSensor.SvcDesc = "Kinect sensor driver"
+KinectRuntimeInstallService.SvcDesc = "Kinect Runtime Install Service"
+ClassName       = "Kinect sensor devices"
+USB\VID_045E&PID_02D8&MI_00.DeviceDesc="WDF KinectSensor Interface 0"
+USB\VID_045E&PID_02C4&MI_00.DeviceDesc="WDF KinectSensor Interface 0"
