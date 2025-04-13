@@ -1,0 +1,36 @@
+% Read the Excel file
+excelFile = readmatrix('FeatureData/DataLog.xlsx');
+runNumber = excelFile(:,1);     % Run numbers
+polarity = excelFile(:,2);      % 1 = good, 0 = bad
+
+% Initialize accumulators
+goodSum = 0;
+goodCount = 0;
+
+badSum = 0;
+badCount = 0;
+
+% Loop over each run
+for i = 1:length(runNumber)
+    fileName = sprintf('Run%d.mat', runNumber(i));
+    filePath = fullfile('FeatureData', fileName);
+    
+    if isfile(filePath)
+        data = load(filePath);
+        
+        % Assuming each file has a variable called 'features'
+        f = data.features;
+        
+        if polarity(i) == 1
+            goodSum = goodSum + f;
+            goodCount = goodCount + 1;
+        elseif polarity(i) == 0
+            badSum = badSum + f;
+            badCount = badCount + 1;
+        else
+            warning('Unexpected polarity value at row %d: %d', i, polarity(i));
+        end
+    else
+        warning('File %s not found.', filePath);
+    end
+end
