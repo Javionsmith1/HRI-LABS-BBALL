@@ -1,0 +1,29 @@
+Joint Positions:
+The 3D coordinates (x, y, z) of each joint (e.g., head, shoulders, elbows, wrists) can be used as features.
+
+
+Joint Velocities:
+The rate of change of joint positions over time can capture movement patterns.
+
+Get timestamp 1 and timestamp 2, subtract
+distance subtraction .... distance/time
+
+Joint Angles:
+The angle between connected joints (e.g., elbow angle) can represent the posture and movement of the body.
+
+I'm working right now with data from a motion capture device, essentially picking up data for three markers placed on the head neck and shoulder in an x y z plane.
+My difficulty trying to develop a code to calculate the joint angles between these three markers. I am able to animate the three coordinates to play as an animation, but I'm more interested in the calculation of the angles between these points changing over time.
+Any ideas on how to go about this?
+ h = atan2(norm(cross(N-H,S-H)),dot(N-H,S-H));
+ n = atan2(norm(cross(S-N,H-N)),dot(S-N,H-N));
+ s = atan2(norm(cross(H-S,N-S)),dot(H-S,N-S));
+
+
+Joint Angular Velocities:
+The rate of change of joint angles over time provides information about the speed and direction of movement.
+
+sub joint angle 1, joint angle 2 / sub time 1 timestamp 2
+
+
+Spatial Relationships:
+Distances and angles between different joints can be used to characterize the overall posture and movement. 
