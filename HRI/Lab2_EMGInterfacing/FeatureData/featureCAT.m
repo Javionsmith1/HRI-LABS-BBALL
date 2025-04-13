@@ -14,15 +14,13 @@ for i = 1:length(shotNumber)
 
     if isfile(fileName)
         data = load(fileName);
-        
-        % Replace 'features' with the actual variable name in the .mat file
-        % You may need to inspect the structure first
-        f = data.features;
+        data = reshape(data.features, 1, []);
 
         if polarity(i) == 1
-            allGoodData = [allGoodData; f];  % concatenate vertically
+            allGoodData = [allGoodData,data];  % concatenate vertically
+
         elseif polarity(i) == 0
-            allBadData = [allBadData; f];
+            allBadData = [allBadData, data];
         else
             warning('Invalid polarity at index %d: %d', i, polarity(i));
         end
