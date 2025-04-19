@@ -1,3 +1,9 @@
+
+%Recall Train Data using Class. App
+
+
+%%
+
 % Read in the Excel file
 excelFile = readmatrix('DataLog.xlsx');
 shotNumber = excelFile(:,1);
@@ -10,7 +16,7 @@ allBadData = [];
 % Loop over each shot
 GoodDataFlag = [];
 BadDataFlag = [];
-for i = 1:10
+for i = 10:20
     % Build the filename, matching the format "Shot_01", etc.
     fileName = sprintf('myEMGData_Shot_%02d_F.mat', shotNumber(i));
 
@@ -42,6 +48,11 @@ fprintf('Total bad samples: %d\n', size(allBadData, 2));
 
 allData = [allGoodData; allBadData];
 allLabels = [GoodDataFlag; BadDataFlag];
-tableDataTrain = table(allData,allLabels);
+tableDataTest = table(allData,allLabels);
 % Optional: Save to file for later use
-save('StitchedEMGDataTrain.mat', 'allGoodData', 'allBadData', 'allData', 'allLabels', 'tableDataTrain');
+save('StitchedEMGDataTest.mat', 'allGoodData', 'allBadData', 'allData', 'allLabels', 'tableDataTest');
+
+%%
+%yfit_train = trainedModel.predictFcn(tableDataTrain);
+yfit_test = trainedModel.predictFcn(tableDataTest);
+

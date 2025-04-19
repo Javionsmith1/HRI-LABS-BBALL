@@ -8,19 +8,24 @@ allGoodData = [];
 allBadData = [];
 
 % Loop over each shot
+GoodDataFlag = [];
+BadDataFlag = [];
 for i = 1:length(shotNumber)
     % Build the filename, matching the format "Shot_01", etc.
     fileName = sprintf('myEMGData_Shot_%02d_F.mat', shotNumber(i));
 
     if isfile(fileName)
         data = load(fileName);
-        reshapedData = reshape
+
+        data = reshape(permute(data.features, [3 1 2]), 285, 32);
 
         if polarity(i) == 1
-            allGoodData = [allGoodData,data];  % concatenate vertically
+            allGoodData = [allGoodData; data];  % concatenate vertically
+            GoodDataFlag = GoodDataFlag+1;
 
         elseif polarity(i) == 0
-            allBadData = [allBadData, f];
+            allBadData = [allBadData; data];
+            BadDataFlag = BadDataFlag+1;
         else
             warning('Invalid polarity at index %d: %d', i, polarity(i));
         end
@@ -30,8 +35,11 @@ for i = 1:length(shotNumber)
 end
 
 % Display results
-fprintf('Total good samples: %d\n', size(allGoodData, 1));
-fprintf('Total bad samples: %d\n', size(allBadData, 1));
+fprintf('Total good samples: %d\n', size(allGoodData, 2));
+fprintf('Total bad samples: %d\n', size(allBadData, 2));
+fprintf('Total good samples: %d\n', GoodDataFlag);
+fprintf('Total bad samples: %d\n', BadDataFlag);
 
+allData = [allGoodData; allBadData];
 % Optional: Save to file for later use
-save('StitchedEMGData.mat', 'allGoodData', 'allBadData');
+save('StitchedEMGData.mat', 'allGoodData', 'allBadData', 'allData');
