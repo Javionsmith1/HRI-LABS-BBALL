@@ -1,0 +1,171 @@
+%Initialize Project Configuration
+Proj_Init;
+
+Distance = zeros(FramesPerTrigger*binSize,24);
+GoodBadMatrix = zeros(binSize);
+%Main Loop
+%while 1
+for A=1:1:binSize 
+
+
+    % Record video and get video data from the kinect
+    start([colorVid depthVid]);
+    trigger([colorVid depthVid]);
+
+    % Retrieve the frames and check if any Skeletons are tracked
+    [colorFrameData,colorTimeData,colorMetaData] = getdata(colorVid);
+    [frameDataDepth, timeDataDepth, metaDataDepth] = getdata(depthVid);
+    stop([colorVid depthVid]);
+
+    % Runs through each frame of video map and analyze joint data
+    for i=1:1:FramesPerTrigger
+        %Validate Frame
+        trackedBodies = IsValidFrame(metaDataDepth(i).IsBodyTracked);
+        if trackedBodies == 0
+            continue
+        end
+
+        nBodies = length(trackedBodies);
+        jointCoordinates = metaDataDepth(i).JointPositions(:, :, trackedBodies);
+        jointIndices = metaDataDepth(i).ColorJointIndices(:, :, trackedBodies);
+        for j = 1:24
+            for body = 1:nBodies
+                %Distance from spine mid to each joint
+                Distance(i*A,j) = sqrt( (jointCoordinates(j,1)-jointCoordinates(2,1))^2 +  (jointCoordinates(j,2)-jointCoordinates(2,2))^2 + (jointCoordinates(j,3)-jointCoordinates(2,3))^2);
+                %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
+                %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
+                %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
+           end
+           %hold on;
+        end
+        %hold off;
+        %pause(.1);
+        clf;
+    end
+    %GoodBadMatrix(A) = input("Good or Bad (1/0)");
+end
+%% 
+
+ num_kinect_samples = size(Distance,1);
+
+% create indices for start and end of sliding data windows
+idxStart = 1:5:num_kinect_samples-windowSize-1;
+idxEnd = idxStart+windowSize-1;
+num_feature_samples = length(idxStart);
+
+% preallocate feature matrix
+features = zeros(num_channels, num_features, num_feature_samples);
+
+
+for b = 1:length(idxStart)
+    windowData = Distance(idxStart(b):idxEnd(b),:);
+    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
+    features(:,:,b) = f;
+end
+
+figure(4)
+% Plot results of feature extract:
+num_plots = 1 + length(featureNames);
+subplot(num_plots,1,1)
+plot(Distance)
+ylim([-1.5 1.5])
+title("Name",'Interpreter','None')
+for i = 2:num_plots
+    subplot(num_plots,1,i)
+    iFeature = i-1;
+    plot(squeeze(features(:,iFeature,:))')
+    title(featureNames{iFeature})
+end
+
+stackedFeatures = reshape(features,num_channels*num_features,[]);
+
+%% Pause and adjust as needed
+
+goodIds = [1:48];
+badIds = [49:72];
+
+goodFeatures = stackedFeatures(:,goodIds);
+badFeatures = stackedFeatures(:,badIds);
+
+
+allLabels = [
+    repmat({'Good'},size(goodFeatures,2),1);
+    repmat({'Bad'},size(badFeatures,2),1);];
+allFeatures = [goodFeatures,badFeatures]';
+
+subplot(2,1,2)
+hold on
+plot(goodIds, 0, 'm.')
+plot(badIds, 0, 'g.')
+
+
+%% Classify
+classLabels = {'Good' 'Bad'};
+
+tableData = table(allFeatures,allLabels);
+
+%% Now with the table data created, Open the 'Classification Learner App'
+%%%%%%%%%%%%%%%%%%%%%%
+% Select the data (tableData)
+% Train the model
+% Export the model to the workspace as 'trainedModel'
+%%%%%%%%%%%%%%%%%%%%%%
+
+%trainedModel = weighted_KNN(tableData)
+
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% AFTER model is trained in the Classification Learner App, re-predict outputs
+
+% Re-predict the outputs using the training data as input
+yfit = trainedModel.predictFcn(tableData);
+
+
+%% Check training accuracy
+figure(1);
+knownId = [];
+classId = [];
+for i = 1:length(yfit)
+    classId(i) = find(strcmp(yfit(i),classLabels));
+    knownId(i) = find(strcmp(allLabels(i),classLabels));
+end
+
+clf
+plot(classId, 'ro')
+hold on; plot(knownId,'k.')
+set(gca,'ytick',1:5,'yticklabel',classLabels)
+ylim([0 6])
+
+%% Extract all features and predict 'test' data
+%
+% These array indices determined empirically given the recorded activity
+% Fix for the training data
+%tdindexIds = 50:75;
+%tdmiddleIds = 100:139;
+%tdringIds = 150:175;
+%tdlittleIds = 200:250;
+%tdrestIds = [1:49 185:200];
+figure(2);
+allFeatures = stackedFeatures';
+tdTest = table(allFeatures);
+
+yfit = trainedModel.predictFcn(tdTest);
+
+% enumerate class id
+classId = [];
+for i = 1:length(yfit)
+    classId(i) = find(strcmp(yfit(i),classLabels));
+end
+
+clf
+subplot(2,1,1)
+plot(emg)
+title(filename,'Interpreter','None')
+subplot(2,1,2)
+plot(classId)
+set(gca,'ytick',1:5,'yticklabel',classLabels)
+ylim([0 6])
+
