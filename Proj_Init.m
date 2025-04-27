@@ -1,3 +1,24 @@
+%init minivie then return 
+cd('C:\GitHub\MiniVIE');
+MiniVIE.configurePath;
+cd('C:\Users\student\Desktop\HRI-LABS-BBALL-main');
+UdpAddress = '127.0.0.1';
+
+%MiniVie Left arm configuration
+LeftUdpLocalPort = 25101; % 25101 = left arm, 25001 = right arm
+LeftUdpDestinationPort = 25100; % 25100 = Left arm; 25000 = Right arm; 
+LefthArm = PnetClass(LeftUdpLocalPort,LeftUdpDestinationPort,UdpAddress);
+LefthArm.initialize()
+
+%MiniVie Right arm configuration
+RightUdpLocalPort = 25001; % 25101 = left arm, 25001 = right arm
+RightUdpDestinationPort = 25000; % 25100 = Left arm; 25000 = Right arm; 
+RighthArm = PnetClass(RightUdpLocalPort,RightUdpDestinationPort,UdpAddress);
+RighthArm.initialize()
+
+upperArmAngles = zeros(1,7);
+fingerAngles = zeros(1,20);
+
 utilpath = 'C:\ProgramData\MATLAB\SupportPackages\R2019b\toolbox\imaq\supportpackages\kinectruntime\kinectforwindowsruntimeexamples';
 addpath(utilpath);
 
