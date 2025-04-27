@@ -1,5 +1,9 @@
+
+tableDataTrain_col1 = tableDataTrain(:,1);
+tableDataTrain_col2 = tableDataTrain(:,2);
+
 % Assume you have already trained the model:
-Mdl = fitcdiscr(X, Y);
+Mdl = fitcdiscr(tableDataTrain(:,1), tableDataTrain(:,2));
 
 % Get linear coefficients for binary classification
 coef = Mdl.Coeffs(1,2);
