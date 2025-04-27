@@ -31,10 +31,15 @@
 
 %Initialize Project Configuration
 %Proj_Init;
-
 % set the position of the wrist
-upperArmAngles(4) = 1.0;
-sendArmPositions(LefthArm,upperArmAngles,fingerAngles);
-upperArmAngles(4) = 2.0;
-sendArmPositions(RighthArm,upperArmAngles,fingerAngles);
 
+%Show good position
+[RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
+sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
+[LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
+sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
+
+%show more wrist
+moreWristAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
+
+%show more 
