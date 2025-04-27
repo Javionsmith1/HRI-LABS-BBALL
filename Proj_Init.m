@@ -1,7 +1,7 @@
 %init minivie then return 
 cd('C:\GitHub\MiniVIE');
 MiniVIE.configurePath;
-cd('C:\Users\student\Documents\GitHub\HRI-LABS-BBALL');
+cd('C:\Users\student\Desktop\HRI-LABS-BBALL-main');
 UdpAddress = '127.0.0.1';
 AnimationTime = 3;
 
