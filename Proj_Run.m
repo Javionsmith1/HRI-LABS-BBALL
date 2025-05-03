@@ -2,10 +2,9 @@
 Proj_Init;
 
 Distance = zeros(FramesPerTrigger*binSize,24);
-GoodBadMatrix = zeros(binSize);
 %Main Loop
 %while 1
-for A=1:1:binSize 
+for A=1:1:4 
 
 
     % Record video and get video data from the kinect
@@ -31,7 +30,10 @@ for A=1:1:binSize
         for j = 1:24
             for body = 1:nBodies
                 %Distance from spine mid to each joint
-                Distance(i*A,j) = sqrt( (jointCoordinates(j,1)-jointCoordinates(2,1))^2 +  (jointCoordinates(j,2)-jointCoordinates(2,2))^2 + (jointCoordinates(j,3)-jointCoordinates(2,3))^2);
+
+                DistanceX(i*A,j,1) = jointCoordinates(j,1);
+                DistanceY(i*A,j,1) = jointCoordinates(j,2);
+                DistanceZ(i*A,j,1) = jointCoordinates(j,3);
                 %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
                 %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
                 %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
@@ -45,23 +47,127 @@ for A=1:1:binSize
     %GoodBadMatrix(A) = input("Good or Bad (1/0)");
 end
 %% 
+numColumns = 24;
+numRows = length(DistanceX);
 
- num_kinect_samples = size(Distance,1);
+labels = [ones(180,1); zeros(numRows-180, 1)];
+labeledDistanceX = [labels, DistanceX];
+labeledDistanceY = [labels, DistanceY];
+labeledDistanceZ = [labels, DistanceZ];
+
+for i=length(labeledDistanceX)
+for j = 1:24
+    %Distance from spine mid to each joint
+
+    x = DistanceX(i,j) 
+    y = DistanceY(i,j) 
+    z = DistanceZ(i,j)
+    if any(DistanceX(1,:)) && any(DistanceX(1,:))
+    %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
+    %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
+    %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
+end
+end
+
+nonZeroFeatureRowsX = any(labeledDistanceX(:, 2:end), 2);
+nonZeroFeatureRowsY = any(labeledDistanceY(:, 2:end), 2);
+nonZeroFeatureRowsZ = any(labeledDistanceZ(:, 2:end), 2);
+
+
+filteredDistance = labeledDistance(nonZeroFeatureRows, :);
+
+justDistance = filteredDistance(:,2:end);
+
+
+
+% preallocate feature matrix
+features = zeros(num_channels, num_features, num_feature_samples);
+
+% good shots without zero rows
+goodShots= justDistance(filteredDistance(:,1) == 1, :);
+% bad shots without zero rows
+badShots = justDistance(filteredDistance(:,1) == 0, :);
+
+
+% distances between good shots
+goodShot = [];
+for i = 1:length(goodShots)
+for j = 1:24
+    for body = 1:nBodies
+        %Distance from spine mid to each joint
+        goodShot(i,j) = sqrt( (goodShots(j,1)-goodShots(2,1))^2 +  (goodShots(j,2)-goodShots(2,2))^2 + (goodShots(j,3)-goodShots(2,3))^2);
+        %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
+        %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
+        %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
+   end
+%hold on;
+end
+end
+
+% distances between bad shots
+badShot = [];
+for i = 1:length(badShots)
+for j = 1:24
+    for body = 1:nBodies
+        %Distance from spine mid to each joint
+
+        badShot(i,j) = sqrt( (badShots(j,1)-badShots(2,1))^2 +  (badShots(j,2)-badShots(2,2))^2 + (badShots(j,3)-badShots(2,3))^2);
+        %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
+        %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
+        %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
+   end
+%hold on;
+end
+end
+
+num_kinect_samples = size(goodShot,1);
 
 % create indices for start and end of sliding data windows
 idxStart = 1:5:num_kinect_samples-windowSize-1;
 idxEnd = idxStart+windowSize-1;
 num_feature_samples = length(idxStart);
 
-% preallocate feature matrix
-features = zeros(num_channels, num_features, num_feature_samples);
-
-
 for b = 1:length(idxStart)
-    windowData = Distance(idxStart(b):idxEnd(b),:);
+    % fix
+    windowData = goodShot(idxStart(b):idxEnd(b),:);
     f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
     features(:,:,b) = f;
 end
+
+features_goodShot = features;
+
+
+num_kinect_samples = size(badShot,1);
+
+% create indices for start and end of sliding data windows
+idxStart = 1:5:num_kinect_samples-windowSize-1;
+idxEnd = idxStart+windowSize-1;
+num_feature_samples = length(idxStart);
+
+for b = 1:length(idxStart)
+    % fix
+    windowData = badShot(idxStart(b):idxEnd(b),:);
+    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
+    features(:,:,b) = f;
+end
+
+features_badShot = features;
+
+
+num_kinect_samples = size(justDistance,1);
+
+% create indices for start and end of sliding data windows
+idxStart = 1:5:num_kinect_samples-windowSize-1;
+idxEnd = idxStart+windowSize-1;
+num_feature_samples = length(idxStart);
+
+for b = 1:length(idxStart)
+    % fix
+    windowData = justDistance(idxStart(b):idxEnd(b),:);
+    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
+    features(:,:,b) = f;
+end
+
 
 figure(4)
 % Plot results of feature extract:
@@ -77,32 +183,43 @@ for i = 2:num_plots
     title(featureNames{iFeature})
 end
 
+stackedFeatures_good = reshape(features_goodShot,num_channels*num_features,[]);
+stackedFeatures_bad = reshape(features_badShot,num_channels*num_features,[]);
+
+stackedFeatures_comb = [stackedFeatures_good; stackedFeatures_bad];
 stackedFeatures = reshape(features,num_channels*num_features,[]);
+
 
 %% Pause and adjust as needed
 
-goodIds = [1:48];
-badIds = [49:72];
 
-goodFeatures = stackedFeatures(:,goodIds);
-badFeatures = stackedFeatures(:,badIds);
+% goodIds = 
+% badIds = filteredDistance(filteredDistance(:,1) == 0, :);
 
+goodFeatures = goodShots;
+badFeatures = badShots;
 
 allLabels = [
-    repmat({'Good'},size(goodFeatures,2),1);
-    repmat({'Bad'},size(badFeatures,2),1);];
-allFeatures = [goodFeatures,badFeatures]';
+    repmat({'Good'},size(goodFeatures,1),1);
+    repmat({'Bad'},size(badFeatures,1),1);];
+allFeatures = [goodFeatures;badFeatures];
 
-subplot(2,1,2)
-hold on
-plot(goodIds, 0, 'm.')
-plot(badIds, 0, 'g.')
+% subplot(2,1,2)
+% hold on
+% plot(goodIds, 0, 'm.')
+% plot(badIds, 0, 'g.')
 
 
 %% Classify
 classLabels = {'Good' 'Bad'};
 
 tableData = table(allFeatures,allLabels);
+
+%% Training data saved
+
+testData = tableData;
+testFeatures = allFeatures;
+
 
 %% Now with the table data created, Open the 'Classification Learner App'
 %%%%%%%%%%%%%%%%%%%%%%
@@ -149,20 +266,24 @@ ylim([0 6])
 %tdlittleIds = 200:250;
 %tdrestIds = [1:49 185:200];
 figure(2);
-allFeatures = stackedFeatures';
+%allFeatures = stackedFeatures';
+allFeatures;
 tdTest = table(allFeatures);
 
 yfit = trainedModel.predictFcn(tdTest);
 
 % enumerate class id
 classId = [];
+knownId = [];
+
 for i = 1:length(yfit)
     classId(i) = find(strcmp(yfit(i),classLabels));
+    knownId(i) = find(strcmp(allLabels(i),classLabels));
 end
 
 clf
 subplot(2,1,1)
-plot(Distance)
+plot(justDistance)
 title("Name",'Interpreter','None')
 subplot(2,1,2)
 plot(classId)
