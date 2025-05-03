@@ -55,170 +55,90 @@ labeledDistanceX = [labels, DistanceX];
 labeledDistanceY = [labels, DistanceY];
 labeledDistanceZ = [labels, DistanceZ];
 
-for i=length(labeledDistanceX)
-for j = 1:24
-    %Distance from spine mid to each joint
 
-    x = DistanceX(i,j) 
-    y = DistanceY(i,j) 
-    z = DistanceZ(i,j)
-    if any(DistanceX(1,:)) && any(DistanceX(1,:))
-    %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
-    %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
-    %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
-end
-end
+zero_rows = all(DistanceX == 0, 2) & all(DistanceY == 0, 2) & all(DistanceZ == 0, 2)
 
-nonZeroFeatureRowsX = any(labeledDistanceX(:, 2:end), 2);
-nonZeroFeatureRowsY = any(labeledDistanceY(:, 2:end), 2);
-nonZeroFeatureRowsZ = any(labeledDistanceZ(:, 2:end), 2);
+DistanceX_new = DistanceX;
+DistanceY_new = DistanceY;
+DistanceZ_new = DistanceZ;
+
+DistanceX_new(zero_rows,:) = [];
+DistanceY_new(zero_rows,:) = []; 
+DistanceZ_new(zero_rows,:) = []; 
+
+labeledDistanceX(zero_rows,:) = [];
+labeledDistanceY(zero_rows,:) = []; 
+labeledDistanceZ(zero_rows,:) = []; 
 
 
-filteredDistance = labeledDistance(nonZeroFeatureRows, :);
-
-justDistance = filteredDistance(:,2:end);
-
-
-
-% preallocate feature matrix
-features = zeros(num_channels, num_features, num_feature_samples);
-
-% good shots without zero rows
-goodShots= justDistance(filteredDistance(:,1) == 1, :);
-% bad shots without zero rows
-badShots = justDistance(filteredDistance(:,1) == 0, :);
-
-
-% distances between good shots
-goodShot = [];
-for i = 1:length(goodShots)
-for j = 1:24
-    for body = 1:nBodies
-        %Distance from spine mid to each joint
-        goodShot(i,j) = sqrt( (goodShots(j,1)-goodShots(2,1))^2 +  (goodShots(j,2)-goodShots(2,2))^2 + (goodShots(j,3)-goodShots(2,3))^2);
-        %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
-        %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
-        %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
-   end
-%hold on;
-end
+%% Distance Calculations
+Distance_midline = [];
+for i = 1:24
+Distance_midline(:,i) = sqrt((DistanceX_new(:,i)- DistanceX_new(:,2)).^2 + (DistanceY_new(:,i)- DistanceY_new(:,2)).^2 + (DistanceZ_new(:,i)- DistanceZ_new(:,2)).^2);
 end
 
-% distances between bad shots
-badShot = [];
-for i = 1:length(badShots)
-for j = 1:24
-    for body = 1:nBodies
-        %Distance from spine mid to each joint
+%% TRAINING Organize to good vs bad
 
-        badShot(i,j) = sqrt( (badShots(j,1)-badShots(2,1))^2 +  (badShots(j,2)-badShots(2,2))^2 + (badShots(j,3)-badShots(2,3))^2);
-        %X1 = [jointIndices(SkeletonConnectionMap(j,1),1,body) jointIndices(SkeletonConnectionMap(j,2),1,body)];
-        %Y1 = [jointIndices(SkeletonConnectionMap(j,1),2,body) jointIndices(SkeletonConnectionMap(j,2),2,body)];
-        %line(X1,Y1, 'LineWidth', 1.5, 'LineStyle', '-', 'Marker', '+', 'Color', colors(body));
-   end
-%hold on;
+labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
+cols_important = [10,11,12,24];
+labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
+
+%% TESTING data compare tho thresholds (the means)
+
+labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
+cols_important = [10,11,12,24];
+labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
+
+[suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
+
+
+switch suggest_idx
+    case 1
+        disp('Adjust Right Elbow')
+        if suggest >= 0
+            disp('Move Elbow Out')
+        else
+            disp('Move Elbow In')
+        end
+    case 2
+        disp('Adjust Right Wrist')
+        if suggest >= 0
+            disp('Move Wrist Forward/Up')
+        else
+            disp('Move Wrist In/Down')
+        end
+    case 3
+        disp('Adjust Right Hand')
+        if suggest >= 0
+            disp('Move Hand Forward/Up')
+        else
+            disp('Move Hand In/Down')
+        end
+    case 4
+        disp('Adjust Right Hand Height')
+        if suggest >= 0
+            disp('Move Hand up')
+        else
+            disp('Move Hand Down')
+        end
 end
-end
+           
 
-num_kinect_samples = size(goodShot,1);
-
-% create indices for start and end of sliding data windows
-idxStart = 1:5:num_kinect_samples-windowSize-1;
-idxEnd = idxStart+windowSize-1;
-num_feature_samples = length(idxStart);
-
-for b = 1:length(idxStart)
-    % fix
-    windowData = goodShot(idxStart(b):idxEnd(b),:);
-    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
-    features(:,:,b) = f;
-end
-
-features_goodShot = features;
-
-
-num_kinect_samples = size(badShot,1);
-
-% create indices for start and end of sliding data windows
-idxStart = 1:5:num_kinect_samples-windowSize-1;
-idxEnd = idxStart+windowSize-1;
-num_feature_samples = length(idxStart);
-
-for b = 1:length(idxStart)
-    % fix
-    windowData = badShot(idxStart(b):idxEnd(b),:);
-    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
-    features(:,:,b) = f;
-end
-
-features_badShot = features;
-
-
-num_kinect_samples = size(justDistance,1);
-
-% create indices for start and end of sliding data windows
-idxStart = 1:5:num_kinect_samples-windowSize-1;
-idxEnd = idxStart+windowSize-1;
-num_feature_samples = length(idxStart);
-
-for b = 1:length(idxStart)
-    % fix
-    windowData = justDistance(idxStart(b):idxEnd(b),:);
-    f = feature_extract(windowData',windowSize,zc_thresh,ssc_thresh,Fs);
-    features(:,:,b) = f;
-end
-
-
-figure(4)
-% Plot results of feature extract:
-num_plots = 1 + length(featureNames);
-subplot(num_plots,1,1)
-plot(Distance)
-ylim([-1.5 1.5])
-title("Name",'Interpreter','None')
-for i = 2:num_plots
-    subplot(num_plots,1,i)
-    iFeature = i-1;
-    plot(squeeze(features(:,iFeature,:))')
-    title(featureNames{iFeature})
-end
-
-stackedFeatures_good = reshape(features_goodShot,num_channels*num_features,[]);
-stackedFeatures_bad = reshape(features_badShot,num_channels*num_features,[]);
-
-stackedFeatures_comb = [stackedFeatures_good; stackedFeatures_bad];
-stackedFeatures = reshape(features,num_channels*num_features,[]);
-
-
-%% Pause and adjust as needed
-
-
-% goodIds = 
-% badIds = filteredDistance(filteredDistance(:,1) == 0, :);
-
-goodFeatures = goodShots;
-badFeatures = badShots;
-
-allLabels = [
-    repmat({'Good'},size(goodFeatures,1),1);
-    repmat({'Bad'},size(badFeatures,1),1);];
-allFeatures = [goodFeatures;badFeatures];
-
-% subplot(2,1,2)
-% hold on
-% plot(goodIds, 0, 'm.')
-% plot(badIds, 0, 'g.')
 
 
 %% Classify
 classLabels = {'Good' 'Bad'};
 
-tableData = table(allFeatures,allLabels);
+allFeatures = Distance_midline;
+allLabels = labeledDistanceX(:,1);
 
-%% Training data saved
+%% TRAINING data
 
-testData = tableData;
-testFeatures = allFeatures;
+tableData_train = table(allFeatures,allLabels);
+
+%% TESTING DATA
+
+tableData_test = table(allFeatures,allLabels);
 
 
 %% Now with the table data created, Open the 'Classification Learner App'
@@ -238,55 +158,115 @@ testFeatures = allFeatures;
 %% AFTER model is trained in the Classification Learner App, re-predict outputs
 
 % Re-predict the outputs using the training data as input
-yfit = trainedModel.predictFcn(tableData);
+yfit = trainedModel.predictFcn(tableData_train);
 
 
 %% Check training accuracy
 figure(1);
-knownId = [];
-classId = [];
-for i = 1:length(yfit)
-    classId(i) = find(strcmp(yfit(i),classLabels));
-    knownId(i) = find(strcmp(allLabels(i),classLabels));
-end
+% knownId = [];
+% classId = [];
+% for i = 1:length(yfit)
+%     classId(i) = yfit(i),classLabels));
+%     knownId(i) = find(strcmp(allLabels(i),classLabels));
+% end
 
 clf
-plot(classId, 'ro')
-hold on; plot(knownId,'k.')
-set(gca,'ytick',1:2,'yticklabel',classLabels)
+plot(yfit, 'ro')
+hold on; plot(allLabels,'k.')
+set(gca,'ytick',0:1,'yticklabel',flip(classLabels))
 ylim([0 6])
 
 %% Extract all features and predict 'test' data
-%
-% These array indices determined empirically given the recorded activity
-% Fix for the training data
-%tdindexIds = 50:75;
-%tdmiddleIds = 100:139;
-%tdringIds = 150:175;
-%tdlittleIds = 200:250;
-%tdrestIds = [1:49 185:200];
-figure(2);
-%allFeatures = stackedFeatures';
-allFeatures;
-tdTest = table(allFeatures);
 
-yfit = trainedModel.predictFcn(tdTest);
+% Re-predict the outputs using the training data as input
+yfit_test = trainedModel.predictFcn(tableData_test);
 
-% enumerate class id
-classId = [];
-knownId = [];
-
-for i = 1:length(yfit)
-    classId(i) = find(strcmp(yfit(i),classLabels));
-    knownId(i) = find(strcmp(allLabels(i),classLabels));
-end
+figure(1);
+% knownId = [];
+% classId = [];
+% for i = 1:length(yfit)
+%     classId(i) = yfit(i),classLabels));
+%     knownId(i) = find(strcmp(allLabels(i),classLabels));
+% end
 
 clf
-subplot(2,1,1)
-plot(justDistance)
-title("Name",'Interpreter','None')
-subplot(2,1,2)
-plot(classId)
-set(gca,'ytick',1:2,'yticklabel',classLabels)
-ylim([0 3])
+plot(yfit_test, 'ro')
+hold on; plot(allLabels,'k.')
+set(gca,'ytick',0:1,'yticklabel',flip(classLabels))
+ylim([0 6])
 
+%% Send data after obtaining the test and training models
+
+labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
+cols_important = [10,11,12,24];
+labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
+
+[suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
+
+
+%% Sending 
+% CHANGE TO ONE IF GOOD SHOT
+good_shot = 0;
+
+
+[NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+
+
+
+
+function [NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+    if good_shot == 1  
+        NUMBER_VIE = 0;
+    else
+        switch suggest_idx
+            case 1
+                NUMBER_VIE = 2;
+                disp('Adjust Right Elbow')
+                if suggest >= 0
+                    disp('Move Elbow Out')
+                else
+                    disp('Move Elbow In')
+                end
+            case 2
+                NUMBER_VIE = 3;
+                disp('Adjust Right Wrist')
+                if suggest >= 0
+                    disp('Move Wrist Forward/Up')
+                else
+                    disp('Move Wrist In/Down')
+                end
+            case 3
+                disp('Adjust Right Hand')
+                if suggest >= 0
+                    disp('Move Hand Forward/Up')
+                    NUMBER_VIE = 4;
+                else
+                    disp('Move Hand In/Down')
+                    NUMBER_VIE = 5;
+                end
+            case 4
+                disp('Adjust Right Hand Height')
+                if suggest >= 0
+                    disp('Move Hand up')
+                    NUMBER_VIE = 4;
+                else
+                    disp('Move Hand Down')
+                    NUMBER_VIE = 5;
+                end
+        end
+    end
+
+
+end
+
+% 0 good
+
+% 1 elbow and wrist
+
+% 2 elbow
+
+% 3 wrist
+
+% 4 higher 
+
+% 5 lower
