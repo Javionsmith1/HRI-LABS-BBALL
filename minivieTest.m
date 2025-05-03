@@ -32,38 +32,44 @@
 %Initialize Project Configuration
 %Proj_Init;
 % set the position of the wrist
-
-%Show good position
+choice = "default";
+AnimationSelection = choice;
 [RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
 sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
 [LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
 sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
 
-%show more wrist
-%moreWristAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
+while choice ~= "q"
+    choice = input('animation selection: ', 's');
+    AnimationSelection = lower(choice);
+switch(AnimationSelection)
+    case "default"
+        %Show good position
+        [RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
+        sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
+        [LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
+        sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
+    case "morewrist"
+        %show more wrist
+        moreWristAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
+    case "higherarch"
+        %show higher arch
+        higherArchAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
+    case "lowerarch"
+        %show lower arch
+        %lowerArchAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
+    case "thumbup"
+        %show thumb up
+        LeftupperArmAngles = zeros(1,7);
+        LeftfingerAngles = zeros(1,20);
+        sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
+        thumbsUp(RighthArm,RightupperArmAngles,RightfingerAngles);
+    otherwise
+        %Show good position
+        [RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
+        sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
+        [LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
+        sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
+end
+end
 
-%show good position
-[RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
-sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
-[LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
-sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
-
-%show higher arch
-higherArchAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
-
-%show good position
-[RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
-sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
-[LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
-sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
-
-%show lower arch
-%lowerArchAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
-
-%show good position
-[RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
-sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
-[LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
-sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
-
-%show elbow in
