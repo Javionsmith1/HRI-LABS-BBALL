@@ -1,48 +1,55 @@
 function [outputArg1,outputArg2] = ElbownWrist(Arm,upperArmAngles,fingerAngles)
-% Create a variable to store the 7 upper arm angles, in radians. 
-% 1: Shoulder Flexion (+) / Shoulder Extension (-)
-% 2: Shoulder Adduction (+) / Shoulder Abduction (-)
-% 3: Humeral Internal Rotation (+) / Humeral External Rotation  (-) 
-% 4: Elbow Flexion (+) / Elbow Extension (-)
-% 5: Wrist Pronation (+) / Wrist Supination (-)
-% 6: Ulnar Deviation (+) / Radial Deviation (-)
-% 7: Wrist Flexion (+) / Wrist Extension (-)
-tLast = tic;    % store the current time for real-time control
+% ElbownWrist - Move shoulder and wrist simultaneously within thresholds.
 
-p = upperArmAngles(2);          % store current position
-direction = 1;  % specify a direction variable +/- 1
-direction2 = 1
+% Extract current shoulder and wrist positions
+p = upperArmAngles(2);   % Shoulder Adduction/Abduction
+q = upperArmAngles(7);   % Wrist Flexion/Extension
+
+% Direction control variables
+direction = 1;
+direction2 = 1;
+
+% Velocities
 v = 1.2;
 v2 = 5;
-q = upperArmAngles(7); % wrist current position
-shoulderFlexThreshold = 0;
-shoulderExtendThreshold = -pi/2;
+
+% Thresholds
+shoulderFlexThreshold = pi/4;
+shoulderExtendThreshold = -pi/4;
 wristFlexThreshold = deg2rad(45);
 wristExtendThreshold = deg2rad(-45);
 
-stopTime = 3; % time in seconds which I need this to stop
+% Timer setup
+tLast = tic;
+stopTime = 3;
+
 while stopTime > 0
     dt = toc(tLast);
     stopTime = stopTime - dt;
     tLast = tic;
 
+    % Shoulder direction update
     if p >= shoulderFlexThreshold
         direction = -1;
-    elseif q <= wristFlexThreshold
-        direction2 = 1;
-
-    elseif q < wristExtendThreshold
-        direction2 = -1;
-
-    elseif p > shoulderExtendThreshold
-        direction = -1;
+    elseif p <= shoulderExtendThreshold
+        direction = 1;
     end
 
-    p = p + (direction* v * dt);
-    q = q + (direction2* v2 * dt);
+    % Wrist direction update
+    if q >= wristFlexThreshold
+        direction2 = -1;
+    elseif q <= wristExtendThreshold
+        direction2 = 1;
+    end
 
+    % Update positions
+    p = p + direction * v * dt;
+    q = q + direction2 * v2 * dt;
+
+    % Assign updated angles
     upperArmAngles(2) = p;
     upperArmAngles(7) = q;
-    disp(p);
-    sendArmPositions(Arm,upperArmAngles,fingerAngles);
+
+    % Send to hardware
+    sendArmPositions(Arm, upperArmAngles, fingerAngles);
 end
