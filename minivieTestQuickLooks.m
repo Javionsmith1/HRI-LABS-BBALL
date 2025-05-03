@@ -58,6 +58,6 @@ sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
 %moreWristAnimation(RighthArm,RightupperArmAngles,RightfingerAngles);
 %ElbowInAnimation(RighthArm, RightupperArmAngles, RightfingerAngles)
 %moreWristAnimation(RighthArm, RightupperArmAngles, RightfingerAngles)
-ElbownWrist(RighthArm, RightupperArmAngles, RightfingerAngles)
-
+%ElbownWrist(RighthArm, RightupperArmAngles, RightfingerAngles)
+higherArchAnimation(RighthArm, RightupperArmAngles,RightfingerAngles)
 %show more 
