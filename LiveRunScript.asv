@@ -10,7 +10,7 @@ Data = streamMyoBandData(time); % function made to collect myo data
 % The model NEEDS to be aready trained, and in the workspace as
 % "trainedModel"
 
-%allData = table(features);
+allData = table(features)
 prediction = trainedModel.predictFcn(Data);
 
 

@@ -1,15 +1,4 @@
 function [featuredata] = streamMyoBandData(time)
-
-%Launch the MyoUdp.exe interface application from the +Inputs directory of the MiniVIE package 
-
-cd('C:\Users\student\Documents\GitHub\HRI-LABS-BBALL\HRI\Drivers\MiniVIE');
-MiniVIE.configurePath;
-
-%% Create an object for UDP interface to the Myo Armband
-hMyo = Inputs.MyoUdp.getInstance();
-hMyo.initialize();
-cd('C:\Users\student\Documents\GitHub\HRI-LABS-BBALL\HRI\Lab2_EMGInterfacing');
-
 %% Get data   emgData size is [1000 samples x 8 channels]
 
 %emgData = hMyo.getData;
@@ -22,9 +11,6 @@ hMyo.getData(num_sample, 1:channels);
 
 emg = hMyo.getData(num_sample, 1:channels);
 
-
-
-%hViewer = GUIs.guiSignalViewer(hMyo);
 
 
 %% Extract features from data
@@ -58,10 +44,8 @@ for b = 1:length(idxStart)
 end
 
 figure(4)
-data = reshape(permute(features, [3 1 2]), 285, 32);
-label = ones(1,length(data))
-featuredata = table(data);
-featuredata.label = label';
+allData = reshape(permute(features, [3 1 2]), 285, 32);
+featuredata = table(allData);
 
 
 

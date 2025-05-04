@@ -1,32 +1,41 @@
 %init minivie then return 
 cd('C:\GitHub\MiniVIE');
 MiniVIE.configurePath;
-cd('C:\Users\student\Desktop\HRI-LABS-BBALL-main');
+cd('C:\Users\student\Documents\GitHub\HRI-LABS-BBALL');
 UdpAddress = '127.0.0.1';
 AnimationTime = 3;
 
 %MiniVie Left arm configuration
 LeftUdpLocalPort = 25101; % 25101 = left arm, 25001 = right arm
 LeftUdpDestinationPort = 25100; % 25100 = Left arm; 25000 = Right arm; 
-LefthArm = PnetClass(LeftUdpLocalPort,LeftUdpDestinationPort,UdpAddress);
-LefthArm.initialize()
+LefthArmNet = PnetClass(LeftUdpLocalPort,LeftUdpDestinationPort,UdpAddress);
+LefthArmNet.initialize()
 
 %MiniVie Right arm configuration
 RightUdpLocalPort = 25001; % 25101 = left arm, 25001 = right arm
 RightUdpDestinationPort = 25000; % 25100 = Left arm; 25000 = Right arm; 
-RighthArm = PnetClass(RightUdpLocalPort,RightUdpDestinationPort,UdpAddress);
-RighthArm.initialize()
+RighthArmNet = PnetClass(RightUdpLocalPort,RightUdpDestinationPort,UdpAddress);
+RighthArmNet.initialize()
 
+%Set All values to 0
 LeftupperArmAngles = zeros(1,7);
 LeftfingerAngles = zeros(1,20);
 RightupperArmAngles = zeros(1,7);
 RightfingerAngles = zeros(1,20);
 
-LeftArm.minivie = LefthArm;
+%create struct for Left Arm
+LeftArm.minivie = LefthArmNet;
 LeftArm.upperArmAngles = LeftupperArmAngles;
 LeftArm.fingerAngles = LeftfingerAngles;
 
+RightArm.minivie = RighthArmNet;
+RightArm.upperArmAngles = RightupperArmAngles;
+RightArm.fingerAngles = RightfingerAngles;
 
+[RightArm.upperArmAngles, RightArm.fingerAngles] = setGoodPosition("right");
+sendArmPositions(RightArm.minivie,RightArm.upperArmAngles, RightArm.fingerAngles);
+[LeftArm.upperArmAngles, LeftArm.fingerAngles] = setGoodPosition("left");
+sendArmPositions(LeftArm.minivie,LeftArm.upperArmAngles, LeftArm.fingerAngles);
 
 utilpath = 'C:\ProgramData\MATLAB\SupportPackages\R2019b\toolbox\imaq\supportpackages\kinectruntime\kinectforwindowsruntimeexamples';
 addpath(utilpath);
@@ -91,11 +100,3 @@ binSize = 10; % number of sample to advance across samples
 zc_thresh = 0.2;  % threshold vaue for zero crossing
 ssc_thresh = 0.2; % threshold vaue for slope sign changes
 Fs = 1000; % sample rate
-
-% create indices for start and end of sliding data windows
-%idxStart = 1:binSize:num_emg_samples-windowSize-1;
-%idxEnd = idxStart+windowSize-1;
-%num_feature_samples = length(idxStart);
-
-% preallocate feature matrix
-%features = zeros(num_channels, num_features, num_feature_samples);
