@@ -1,10 +1,13 @@
-%Initialize Project Configuration
+%% Section 0: Initialize Project Configuration
 Proj_Init;
+
+%% Section 1: Get Data
 
 Distance = zeros(FramesPerTrigger*binSize,24);
 %Main Loop
 %while 1
-for A=1:1:4 
+NumShots = 3;
+for A=1:1:NumShots
 
 
     % Record video and get video data from the kinect
@@ -44,19 +47,46 @@ for A=1:1:4
         %pause(.1);
         clf;
     end
+    A*i
+    input('Press enter to continue...', 's');
     %GoodBadMatrix(A) = input("Good or Bad (1/0)");
 end
-%% 
+%% Section 2
+
 numColumns = 24;
 numRows = length(DistanceX);
 
-labels = [ones(180,1); zeros(numRows-180, 1)];
+% HARD CODED
+ShotLabel = [1,1,0];
+
+% FIXME
+
+
+labels = zeros(FramesPerTrigger*length(ShotLabel),1);
+for lab_i = 1:length(ShotLabel)
+    labels((lab_i-1)*FramesPerTrigger + 1: lab_i*FramesPerTrigger) = ShotLabel(lab_i);
+end
+
+
+%NumShots = length(ShotLabel);
+
+% count = 1;
+% for i = 0:NumShots-1
+%     labels(count:(i+1)*FramesPerTrigger,:)
+% 
+%     count = (i+1)*285 + 1;
+% end
+    
+
+
+%labels = [ones(NumShots*FramesPerTrigger,1); zeros(numRows-(NumShots*FramesPerTrigger), 1)];
+
 labeledDistanceX = [labels, DistanceX];
 labeledDistanceY = [labels, DistanceY];
 labeledDistanceZ = [labels, DistanceZ];
 
 
-zero_rows = all(DistanceX == 0, 2) & all(DistanceY == 0, 2) & all(DistanceZ == 0, 2)
+zero_rows = all(DistanceX == 0, 2) & all(DistanceY == 0, 2) & all(DistanceZ == 0, 2);
 
 DistanceX_new = DistanceX;
 DistanceY_new = DistanceY;
@@ -71,74 +101,22 @@ labeledDistanceY(zero_rows,:) = [];
 labeledDistanceZ(zero_rows,:) = []; 
 
 
-%% Distance Calculations
+%% Section 3: Distance Calculations
 Distance_midline = [];
 for i = 1:24
 Distance_midline(:,i) = sqrt((DistanceX_new(:,i)- DistanceX_new(:,2)).^2 + (DistanceY_new(:,i)- DistanceY_new(:,2)).^2 + (DistanceZ_new(:,i)- DistanceZ_new(:,2)).^2);
 end
 
-%% TRAINING Organize to good vs bad
 
-labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
-cols_important = [10,11,12,24];
-labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
-
-%% TESTING data compare tho thresholds (the means)
-
-labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
-cols_important = [10,11,12,24];
-labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
-
-[suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
-
-
-switch suggest_idx
-    case 1
-        disp('Adjust Right Elbow')
-        if suggest >= 0
-            disp('Move Elbow Out')
-        else
-            disp('Move Elbow In')
-        end
-    case 2
-        disp('Adjust Right Wrist')
-        if suggest >= 0
-            disp('Move Wrist Forward/Up')
-        else
-            disp('Move Wrist In/Down')
-        end
-    case 3
-        disp('Adjust Right Hand')
-        if suggest >= 0
-            disp('Move Hand Forward/Up')
-        else
-            disp('Move Hand In/Down')
-        end
-    case 4
-        disp('Adjust Right Hand Height')
-        if suggest >= 0
-            disp('Move Hand up')
-        else
-            disp('Move Hand Down')
-        end
-end
-           
-
-
-
-%% Classify
+%% Section 5: Classify
 classLabels = {'Good' 'Bad'};
 
 allFeatures = Distance_midline;
 allLabels = labeledDistanceX(:,1);
 
-%% TRAINING data
+%% Section 6: TRAINING data
 
 tableData_train = table(allFeatures,allLabels);
-
-%% TESTING DATA
-
-tableData_test = table(allFeatures,allLabels);
 
 
 %% Now with the table data created, Open the 'Classification Learner App'
@@ -163,12 +141,6 @@ yfit = trainedModel.predictFcn(tableData_train);
 
 %% Check training accuracy
 figure(1);
-% knownId = [];
-% classId = [];
-% for i = 1:length(yfit)
-%     classId(i) = yfit(i),classLabels));
-%     knownId(i) = find(strcmp(allLabels(i),classLabels));
-% end
 
 clf
 plot(yfit, 'ro')
@@ -176,97 +148,96 @@ hold on; plot(allLabels,'k.')
 set(gca,'ytick',0:1,'yticklabel',flip(classLabels))
 ylim([0 6])
 
-%% Extract all features and predict 'test' data
-
-% Re-predict the outputs using the training data as input
-yfit_test = trainedModel.predictFcn(tableData_test);
-
-figure(1);
-% knownId = [];
-% classId = [];
-% for i = 1:length(yfit)
-%     classId(i) = yfit(i),classLabels));
-%     knownId(i) = find(strcmp(allLabels(i),classLabels));
+%% commented out
+% %% TEST Extract all features and predict 'test' data
+% 
+% % Re-predict the outputs using the training data as input
+% yfit_test = trainedModel.predictFcn(tableData_test);
+% 
+% figure(1);
+% 
+% clf
+% plot(yfit_test, 'ro')
+% hold on; plot(allLabels,'k.')
+% set(gca,'ytick',0:1,'yticklabel',flip(classLabels))
+% ylim([0 6])
+% 
+% %% TEST Send data after obtaining the test and training models
+% 
+% labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
+% cols_important = [10,11,12,24];
+% labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
+% 
+% labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
+% cols_important = [10,11,12,24];
+% labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
+% 
+% [suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
+% 
+% 
+% %% TEST Sending 
+% % CHANGE TO ONE IF GOOD SHOT
+% good_shot = 0;
+% 
+% 
+% [NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+% 
+% 
+% 
+% 
+% function [NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+%     if good_shot == 1  
+%         NUMBER_VIE = 0;
+%     else
+%         switch suggest_idx
+%             case 1
+%                 NUMBER_VIE = 2;
+%                 disp('Adjust Right Elbow')
+%                 if suggest >= 0
+%                     disp('Move Elbow Out')
+%                 else
+%                     disp('Move Elbow In')
+%                 end
+%             case 2
+%                 NUMBER_VIE = 3;
+%                 disp('Adjust Right Wrist')
+%                 if suggest >= 0
+%                     disp('Move Wrist Forward/Up')
+%                 else
+%                     disp('Move Wrist In/Down')
+%                 end
+%             case 3
+%                 disp('Adjust Right Hand')
+%                 if suggest >= 0
+%                     disp('Move Hand Forward/Up')
+%                     NUMBER_VIE = 4;
+%                 else
+%                     disp('Move Hand In/Down')
+%                     NUMBER_VIE = 5;
+%                 end
+%             case 4
+%                 disp('Adjust Right Hand Height')
+%                 if suggest >= 0
+%                     disp('Move Hand up')
+%                     NUMBER_VIE = 4;
+%                 else
+%                     disp('Move Hand Down')
+%                     NUMBER_VIE = 5;
+%                 end
+%         end
+%     end
+% 
+% 
 % end
-
-clf
-plot(yfit_test, 'ro')
-hold on; plot(allLabels,'k.')
-set(gca,'ytick',0:1,'yticklabel',flip(classLabels))
-ylim([0 6])
-
-%% Send data after obtaining the test and training models
-
-labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
-cols_important = [10,11,12,24];
-labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
-
-[suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
-
-
-%% Sending 
-% CHANGE TO ONE IF GOOD SHOT
-good_shot = 0;
-
-
-[NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
-
-
-
-
-function [NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
-    if good_shot == 1  
-        NUMBER_VIE = 0;
-    else
-        switch suggest_idx
-            case 1
-                NUMBER_VIE = 2;
-                disp('Adjust Right Elbow')
-                if suggest >= 0
-                    disp('Move Elbow Out')
-                else
-                    disp('Move Elbow In')
-                end
-            case 2
-                NUMBER_VIE = 3;
-                disp('Adjust Right Wrist')
-                if suggest >= 0
-                    disp('Move Wrist Forward/Up')
-                else
-                    disp('Move Wrist In/Down')
-                end
-            case 3
-                disp('Adjust Right Hand')
-                if suggest >= 0
-                    disp('Move Hand Forward/Up')
-                    NUMBER_VIE = 4;
-                else
-                    disp('Move Hand In/Down')
-                    NUMBER_VIE = 5;
-                end
-            case 4
-                disp('Adjust Right Hand Height')
-                if suggest >= 0
-                    disp('Move Hand up')
-                    NUMBER_VIE = 4;
-                else
-                    disp('Move Hand Down')
-                    NUMBER_VIE = 5;
-                end
-        end
-    end
-
-
-end
-
-% 0 good
-
-% 1 elbow and wrist
-
-% 2 elbow
-
-% 3 wrist
-
-% 4 higher 
-
-% 5 lower
+% 
+% % 0 good
+% 
+% % 1 elbow and wrist
+% 
+% % 2 elbow
+% 
+% % 3 wrist
+% 
+% % 4 higher 
+% 
+% % 5 lower
