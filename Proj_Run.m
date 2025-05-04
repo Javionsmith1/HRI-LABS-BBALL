@@ -6,6 +6,9 @@ Proj_Init;
 Distance = zeros(FramesPerTrigger*binSize,24);
 %Main Loop
 %while 1
+DistanceX = [];
+DistanceY = [];
+DistanceZ = [];
 NumShots = 3;
 for A=1:1:NumShots
 
@@ -23,6 +26,7 @@ for A=1:1:NumShots
     for i=1:1:FramesPerTrigger
         %Validate Frame
         trackedBodies = IsValidFrame(metaDataDepth(i).IsBodyTracked);
+        disp(trackedBodies);
         if trackedBodies == 0
             continue
         end
@@ -111,6 +115,9 @@ labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
 cols_important = [10,11,12,24];
 labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
 
+
+labeledDistanceX_GoodLabels_maxs = max(labeledDistanceX_GoodLabels(:, cols_important),[],1);
+labeledDistanceX_GoodLabels_mins = min(labeledDistanceX_GoodLabels(:, cols_important),[],1);
 
 
 %% Section 5: Classify

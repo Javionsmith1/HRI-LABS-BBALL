@@ -132,56 +132,89 @@ labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
 cols_important = [10,11,12,24];
 labeledDistanceX_BadLabels_means = mean(labeledDistanceX_BadLabels(:, cols_important),1);
 
-[suggest, suggest_idx] = max(labeledDistanceX_GoodLabels_means - labeledDistanceX_BadLabels_means);
 
+
+labeledDistanceX_BadLabels_maxs = max(labeledDistanceX_BadLabels(:, cols_important),[],1);
+labeledDistanceX_BadLabels_mins = min(labeledDistanceX_BadLabels(:, cols_important),[],1);
+
+suggest_idx = labeledDistanceX_GoodLabels_maxs < labeledDistanceX_BadLabels_means | labeledDistanceX_GoodLabels_mins > labeledDistanceX_BadLabels_means;
+
+%%
+
+plot(labeledDistanceX_BadLabels_means,'-o')
+hold on
+plot(labeledDistanceX_BadLabels_mins,'-o')
+hold on
+plot(labeledDistanceX_BadLabels_maxs,'-o')
+hold on
+plot(labeledDistanceX_GoodLabels_means,'-o')
+hold on
+plot(labeledDistanceX_GoodLabels_mins,'-o')
+hold on
+plot(labeledDistanceX_GoodLabels_maxs,'-o')
+
+legend('BadMean', 'BadMin', 'BadMax','GoodMean', 'GoodMin', 'GoodMax')
 
 %% Sending 
 
 
-[NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+NUMBER_VIE = FeedData(suggest_idx, good_shot)
 
 
 %% FUNCTIONS
 
-function [NUMBER_VIE] = FeedData(suggest_idx, suggest, good_shot)
+function VIEList = FeedData(suggest_idx,good_shot)
     if good_shot == 1  
         NUMBER_VIE = 0;
     else
-        switch suggest_idx
-            case 1
-                NUMBER_VIE = 2;
-                disp('Adjust Right Elbow')
-                if suggest >= 0
-                    disp('Move Elbow Out')
-                else
-                    disp('Move Elbow In')
-                end
-            case 2
-                NUMBER_VIE = 3;
-                disp('Adjust Right Wrist')
-                if suggest >= 0
-                    disp('Move Wrist Forward/Up')
-                else
-                    disp('Move Wrist In/Down')
-                end
-            case 3
-                disp('Adjust Right Hand')
-                if suggest >= 0
-                    disp('Move Hand Forward/Up')
+        VIEList = [];
+        [~, col_idx] = find(suggest_idx);
+        unique_cols = unique(col_idx);
+        for i = 1:length(unique_cols)
+            col = unique_cols(i);
+
+            switch col
+                case 1
+                    NUMBER_VIE = 2;
+                    disp('Adjust Right Elbow')
+                    VIEList = [VIEList, NUMBER_VIE];
+                    % if suggest >= 0
+                    %     disp('Move Elbow Out')
+                    % else
+                    %     disp('Move Elbow In')
+                    % end
+                case 2
+                    NUMBER_VIE = 3;
+                    disp('Adjust Right Wrist')
+                    VIEList = [VIEList, NUMBER_VIE];
+                    % if suggest >= 0
+                    %     disp('Move Wrist Forward/Up')
+                    % else
+                    %     disp('Move Wrist In/Down')
+                    % end
+                case 3
                     NUMBER_VIE = 4;
-                else
-                    disp('Move Hand In/Down')
+                    disp('Adjust Right Hand')
+                    VIEList = [VIEList, NUMBER_VIE];
+                    % if suggest >= 0
+                    %     disp('Move Hand Forward/Up')
+                    %     NUMBER_VIE = 4;
+                    % else
+                    %     disp('Move Hand In/Down')
+                    %     NUMBER_VIE = 5;
+                    % end
+                case 4
                     NUMBER_VIE = 5;
-                end
-            case 4
-                disp('Adjust Right Hand Height')
-                if suggest >= 0
-                    disp('Move Hand up')
-                    NUMBER_VIE = 4;
-                else
-                    disp('Move Hand Down')
-                    NUMBER_VIE = 5;
-                end
+                    disp('Adjust Right Hand Height')
+                    VIEList = [VIEList, NUMBER_VIE];
+                    % if suggest >= 0
+                    %     disp('Move Hand up')
+                    %     NUMBER_VIE = 4;
+                    % else
+                    %     disp('Move Hand Down')
+                    %     NUMBER_VIE = 5;
+                    % end
+            end
         end
     end
 
