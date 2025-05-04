@@ -131,3 +131,25 @@ gscatter(score(:,2),score(:,3),allLabels)
 xlabel('PC 2')
 ylabel('PC 3')
 title('Training Data')
+
+%% KNN
+
+
+X = allFeatures;  
+y = allLabels; 
+
+% Train the k-NN classifier
+k = 1;  % Number of neighbors
+knnModel = fitcknn(X, y, 'NumNeighbors', k);
+
+% Test data point (e.g., a new observation)
+testPoint = allFeatures_test(1:285,:);  % A test data point
+
+% Predict the class of the test point
+%[predictedLabel, scores] = predict(knnModel, testPoint);
+[predictedLabel, scores] = predict(trainedModel.ClassificationKNN, testPoint);
+
+% Find the nearest neighbors of the test point
+[nearestIdx, distances] = knnsearch(X, testPoint, 'K', k);
+
+%%
