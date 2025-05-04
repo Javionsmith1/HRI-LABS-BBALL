@@ -107,6 +107,11 @@ for i = 1:24
 Distance_midline(:,i) = sqrt((DistanceX_new(:,i)- DistanceX_new(:,2)).^2 + (DistanceY_new(:,i)- DistanceY_new(:,2)).^2 + (DistanceZ_new(:,i)- DistanceZ_new(:,2)).^2);
 end
 
+labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
+cols_important = [10,11,12,24];
+labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
+
+
 
 %% Section 5: Classify
 classLabels = {'Good' 'Bad'};

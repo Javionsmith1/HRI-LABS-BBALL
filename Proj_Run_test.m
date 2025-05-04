@@ -126,10 +126,6 @@ ylim([0 6])
 
 %% Section 4: TRAINING Organize to good vs bad
 
-labeledDistanceX_GoodLabels = Distance_midline(labeledDistanceX(:,1) == 1,:);
-cols_important = [10,11,12,24];
-labeledDistanceX_GoodLabels_means = mean(labeledDistanceX_GoodLabels(:, cols_important),1);
-
 
 
 labeledDistanceX_BadLabels = Distance_midline(labeledDistanceX(:,1) == 0,:);
