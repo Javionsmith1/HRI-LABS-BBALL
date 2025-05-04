@@ -50,7 +50,7 @@
 
 %Show good position
 [RightupperArmAngles, RightfingerAngles] = setGoodPosition("right");
-sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
+sendArmPositions(RightArm.minivie,RightupperArmAngles,RightfingerAngles);
 %[LeftupperArmAngles, LeftfingerAngles] = setGoodPosition("left");
 %sendArmPositions(LefthArm,LeftupperArmAngles,LeftfingerAngles);
 
@@ -59,7 +59,7 @@ sendArmPositions(RighthArm,RightupperArmAngles,RightfingerAngles);
 %ElbowInAnimation(RighthArm, RightupperArmAngles, RightfingerAngles)
 %moreWristAnimation(RighthArm, RightupperArmAngles, RightfingerAngles)
 %ElbownWrist(RighthArm, RightupperArmAngles, RightfingerAngles)
-higherArchAnimation(RighthArm, RightupperArmAngles,RightfingerAngles)
+higherArchAnimation(RightArm.minivie, RightupperArmAngles,RightfingerAngles)
 %lowerArchAnimation(RighthArm, RightupperArmAngles,RightfingerAngles)
 
 %show more 

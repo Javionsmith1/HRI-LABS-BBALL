@@ -22,7 +22,7 @@ hMyo.getData(num_sample, 1:channels);
 
 emg = hMyo.getData(num_sample, 1:channels);
 
-
+pause(3);
 
 %hViewer = GUIs.guiSignalViewer(hMyo);
 

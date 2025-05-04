@@ -1,26 +1,39 @@
 %init minivie then return 
 cd('C:\GitHub\MiniVIE');
 MiniVIE.configurePath;
-cd('C:\Users\student\Desktop\HRI-LABS-BBALL-main');
+cd('C:\Users\student\Documents\GitHub\HRI-LABS-BBALL');
 UdpAddress = '127.0.0.1';
 AnimationTime = 3;
 
 %MiniVie Left arm configuration
 LeftUdpLocalPort = 25101; % 25101 = left arm, 25001 = right arm
 LeftUdpDestinationPort = 25100; % 25100 = Left arm; 25000 = Right arm; 
-LefthArm = PnetClass(LeftUdpLocalPort,LeftUdpDestinationPort,UdpAddress);
-LefthArm.initialize()
+LefthArmNet = PnetClass(LeftUdpLocalPort,LeftUdpDestinationPort,UdpAddress);
+LefthArmNet.initialize()
 
 %MiniVie Right arm configuration
 RightUdpLocalPort = 25001; % 25101 = left arm, 25001 = right arm
 RightUdpDestinationPort = 25000; % 25100 = Left arm; 25000 = Right arm; 
-RighthArm = PnetClass(RightUdpLocalPort,RightUdpDestinationPort,UdpAddress);
-RighthArm.initialize()
+RighthArmNet = PnetClass(RightUdpLocalPort,RightUdpDestinationPort,UdpAddress);
+RighthArmNet.initialize()
 
 LeftupperArmAngles = zeros(1,7);
 LeftfingerAngles = zeros(1,20);
 RightupperArmAngles = zeros(1,7);
 RightfingerAngles = zeros(1,20);
+
+LeftArm.minivie = LefthArmNet;
+LeftArm.upperArmAngles = LeftupperArmAngles;
+LeftArm.fingerAngles = LeftfingerAngles;
+
+RightArm.minivie = RighthArmNet;
+RightArm.upperArmAngles = RightupperArmAngles;
+RightArm.fingerAngles = RightfingerAngles;
+
+[RightArm.upperArmAngles, RightArm.fingerAngles] = setGoodPosition("right");
+sendArmPositions(RightArm.minivie,RightArm.upperArmAngles, RightArm.fingerAngles);
+[LeftArm.upperArmAngles, LeftArm.fingerAngles] = setGoodPosition("left");
+sendArmPositions(LeftArm.minivie,LeftArm.upperArmAngles, LeftArm.fingerAngles);
 
 utilpath = 'C:\ProgramData\MATLAB\SupportPackages\R2019b\toolbox\imaq\supportpackages\kinectruntime\kinectforwindowsruntimeexamples';
 addpath(utilpath);
