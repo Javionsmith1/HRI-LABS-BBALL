@@ -20,11 +20,7 @@ prediction = trainedModel.predictFcn(Data);
 Decision = mode(prediction);
 
 
-
-
 % Make a suggestion
-
-
 
 
 % Play animation
