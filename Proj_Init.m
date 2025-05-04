@@ -40,9 +40,9 @@ sendArmPositions(RightArm.minivie,RightArm.upperArmAngles, RightArm.fingerAngles
 sendArmPositions(LeftArm.minivie,LeftArm.upperArmAngles, LeftArm.fingerAngles);
 
 %MyoBand Init
-hMyo = Inputs.MyoUdp.getInstance();
-hMyo.initialize();
-pause(3);
+%hMyo = Inputs.MyoUdp.getInstance();
+%hMyo.initialize();
+%pause(3);
 
 %Kinect initilization
 utilpath = 'C:\ProgramData\MATLAB\SupportPackages\R2019b\toolbox\imaq\supportpackages\kinectruntime\kinectforwindowsruntimeexamples';

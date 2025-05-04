@@ -1,6 +1,8 @@
 function [featuredata] = streamMyoBandData(time)
 %% Get data   emgData size is [1000 samples x 8 channels]
 
+hMyo = Inputs.MyoUdp.getInstance();
+hMyo.initialize();
 %emgData = hMyo.getData;
 channels = 8;
 SAMPLE_RATE = 1000; %200 = hertz
@@ -10,7 +12,7 @@ num_sample = time * SAMPLE_RATE;
 hMyo.getData(num_sample, 1:channels);
 
 emg = hMyo.getData(num_sample, 1:channels);
-
+pause(4);
 
 
 %% Extract features from data
@@ -43,7 +45,7 @@ for b = 1:length(idxStart)
     features(:,:,b) = f;
 end
 
-figure(4)
+%figure(4)
 allData = reshape(permute(features, [3 1 2]), 285, 32);
 featuredata = table(allData);
 
