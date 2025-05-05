@@ -9,7 +9,7 @@ Distance = zeros(FramesPerTrigger*binSize,24);
 DistanceX = [];
 DistanceY = [];
 DistanceZ = [];
-NumShots = 3;
+NumShots = 5;
 for A=1:1:NumShots
 
 
@@ -49,7 +49,6 @@ for A=1:1:NumShots
         end
         %hold off;
         %pause(.1);
-        clf;
     end
     A*i
     input('Press enter to continue...', 's');
@@ -61,7 +60,7 @@ numColumns = 24;
 numRows = length(DistanceX);
 
 % HARD CODED
-ShotLabel = [1,1,0];
+ShotLabel = [0,1,1,1,1];
 
 % FIXME
 
@@ -148,7 +147,7 @@ tableData_train = table(allFeatures,allLabels);
 %% AFTER model is trained in the Classification Learner App, re-predict outputs
 
 % Re-predict the outputs using the training data as input
-yfit = trainedModel.predictFcn(tableData_train);
+yfit = trainedModel_kinect.predictFcn(tableData_train);
 
 
 %% Check training accuracy

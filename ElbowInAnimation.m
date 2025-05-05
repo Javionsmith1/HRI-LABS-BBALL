@@ -29,6 +29,6 @@ while stopTime > 0
 
     p = p + (direction* v * dt);
     upperArmAngles(2) = p;
-    disp(p);
+    %disp(p);
     sendArmPositions(Arm,upperArmAngles,fingerAngles);
 end

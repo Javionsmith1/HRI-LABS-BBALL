@@ -12,7 +12,7 @@ num_sample = time * SAMPLE_RATE;
 hMyo.getData(num_sample, 1:channels);
 
 emg = hMyo.getData(num_sample, 1:channels);
-pause(4);
+pause(2);
 
 
 %% Extract features from data

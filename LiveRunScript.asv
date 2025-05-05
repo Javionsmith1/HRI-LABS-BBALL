@@ -4,13 +4,22 @@
 time = 3; % amount of seconds for a collect
 Data = streamMyoBandData(time); % function made to collect myo data
 
+
+DistanceX, DistanceY, DistanceZ  = get_kinect();
+%% pause to tell it if it was good or not
+
+good_shot = 0;
+
+suggest_idx = suggest_kinect(DistanceX, DistanceY, DistanceZ, good_shot);
+
+NUMBER_VIE = FeedData(suggest_idx, good_shot);
 % Streams in Kinect Data 
 
 % Feeds the model
 % The model NEEDS to be aready trained, and in the workspace as
 % "trainedModel"
 
-allData = table(features)
+%allData = table(features);
 prediction = trainedModel.predictFcn(Data);
 
 
@@ -20,11 +29,7 @@ prediction = trainedModel.predictFcn(Data);
 Decision = mode(prediction);
 
 
-
-
 % Make a suggestion
-
-
 
 
 % Play animation
